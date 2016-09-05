@@ -34,6 +34,6 @@ module JobsRepresenter
 end
 
 get '/jobs/?' do
-  products = Jobs.all
-  JobsRepresenter.for_collection.prepare(products).to_json
+  jobs = Jobs.all
+  JobsRepresenter.for_collection.prepare(jobs).to_json
 end
