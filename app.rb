@@ -5,35 +5,40 @@ require 'bundler'
 Bundler.require
 
 require 'sinatra'
-require 'roar/json/hal'
 require 'rack/conneg'
 require 'sinatra/activerecord'
-require 'yaml'
+require_relative 'modules/jobs.rb'
 
 # Register Extension
 class DockerJob < Sinatra::Base
   register Sinatra::ActiveRecordExtension
 end
 
-# Validates jobs table
-class Jobs < ActiveRecord::Base
-  validates_presence_of :scheduled_for
-  validates_presence_of :status
+get '/list' do
+  jobs = Jobs.all
+  return jobs.to_json
 end
 
-# JobsRepresenter
-module JobsRepresenter
-  include Roar::JSON::HAL
+get '/status/:id' do
+  id = params[:id]
+  job = Jobs.where(id: id)
+  return job.pluck(:status).to_json
+end
 
-  property :name
-  property :status
+post '/schedule' do
+  name = params[:name]
 
-  link :self do
-    "/jobs/#{id}"
+  if name.nil? || name.empty?
+    halt 400, { message: 'name field cannot be empty' }.to_json
+  else
+    job = Jobs.create(name: name, status: 'DONE')
+
+    return "Job #{job.name} scheduled"
   end
 end
 
-get '/jobs/?' do
-  jobs = Jobs.all
-  JobsRepresenter.for_collection.prepare(jobs).to_json
+put '/callback/:id' do
+  id = params[:id]
+  job = Jobs.find_by(id: id)
+  job.update_attributes(status: 'DONE')
 end
