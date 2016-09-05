@@ -1,12 +1,11 @@
+default: &default
+  adapter: 'mysql2'
+  host: 'localhost'
+  username: 'root'
+  password: ''
 production:
-  db_adapter: mysql2
-  db_name: 'docker_job_prod'
-  db_host: 'localhost'
-  db_username: 'root'
-  db_password: ''
+  <<: *default
+  database: 'docker_job_prod'
 development:
-  db_adapter: mysql2
-  db_name: 'docker_job_dev'
-  db_host: 'localhost'
-  db_username: 'root'
-  db_password: ''
+  <<: *default
+  database: 'docker_job_dev'

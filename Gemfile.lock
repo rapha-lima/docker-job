@@ -18,7 +18,6 @@ GEM
     minitest (5.9.0)
     multi_json (1.12.1)
     mysql2 (0.4.4)
-    puma (3.6.0)
     rack (1.6.4)
     rack-conneg (0.1.5)
       rack (>= 1.0)
@@ -46,10 +45,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord
   multi_json
   mysql2
-  puma
   rack-conneg
   rake
   roar

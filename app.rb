@@ -2,27 +2,38 @@
 require 'rubygems'
 require 'bundler'
 
-# Bundler.require
+Bundler.require
 
 require 'sinatra'
 require 'roar/json/hal'
 require 'rack/conneg'
-# require 'sinatra/activerecord'
-require 'active_record'
+require 'sinatra/activerecord'
 require 'yaml'
 
-env = ENV['RACK_ENV'] || 'development'
-
-database_config = YAML.load(File.open('config/database.yml'))[env]
-
-database_config.symbolize_keys.each do |key, value|
-  set key, value
+# Register Extension
+class DockerJob < Sinatra::Base
+  register Sinatra::ActiveRecordExtension
 end
 
-ActiveRecord::Base.establish_connection(
-  adapter: settings.db_adapter,
-  host: settings.db_host,
-  database: settings.db_name,
-  username: settings.db_username,
-  password: settings.db_password
-)
+# Validates jobs table
+class Jobs < ActiveRecord::Base
+  validates_presence_of :scheduled_for
+  validates_presence_of :status
+end
+
+# JobsRepresenter
+module JobsRepresenter
+  include Roar::JSON::HAL
+
+  property :name
+  property :status
+
+  link :self do
+    "/jobs/#{id}"
+  end
+end
+
+get '/jobs/?' do
+  products = Jobs.all
+  JobsRepresenter.for_collection.prepare(products).to_json
+end
