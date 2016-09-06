@@ -13,9 +13,11 @@
 ActiveRecord::Schema.define(version: 20160905044351) do
 
   create_table "jobs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.string "name"
-    t.string "scheduled_for"
-    t.string "status"
+    t.string   "name"
+    t.string   "docker_image"
+    t.text     "env_vars",      limit: 65535
+    t.datetime "scheduled_for"
+    t.string   "status"
   end
 
 end
