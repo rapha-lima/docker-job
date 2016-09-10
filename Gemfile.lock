@@ -19,8 +19,6 @@ GEM
     minitest (5.9.0)
     mysql2 (0.4.4)
     rack (1.6.4)
-    rack-conneg (0.1.5)
-      rack (>= 1.0)
     rack-protection (1.5.3)
       rack
     rake (11.2.2)
@@ -47,8 +45,10 @@ PLATFORMS
 
 DEPENDENCIES
   mysql2
-  rack-conneg
   rake
   sidekiq
   sinatra
   sinatra-activerecord
+
+BUNDLED WITH
+   1.13.0
