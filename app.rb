@@ -7,7 +7,9 @@ Bundler.require
 require 'sinatra'
 require 'rack/conneg'
 require 'sinatra/activerecord'
+require 'time'
 require_relative 'modules/jobs.rb'
+require_relative 'workers/docker_job.rb'
 
 get '/list' do
   jobs = Jobs.all
@@ -38,15 +40,17 @@ post '/schedule' do
   elsif scheduled_for.nil? || scheduled_for.empty?
     halt 400, { message: 'scheduled_for field cannot be empty' }.to_json
   else
-    job = Jobs.create(
+    validate_time(scheduled_for)
+    job_created = Jobs.create(
       name: name,
       docker_image: docker_image,
       env_vars: env_vars,
       scheduled_for: scheduled_for,
       status: 'SCHEDULED'
     )
-
-    return "Job #{job.name} scheduled"
+    # DockerJob.perform_in(scheduled_for, docker_image, env_vars)
+    job = Jobs.where(id: job_created.id).select(:id)
+    return job.to_json
   end
 end
 
@@ -60,5 +64,14 @@ put '/callback/:id' do
     job.update_attributes(scheduled_for: scheduled_for, status: 'RESCHEDULED')
   elsif reschedule == 'false'
     job.update_attributes(status: 'DONE')
+  end
+end
+
+private
+
+def validate_time(time)
+  if Time.parse(time) < Time.now
+    halt 400, { message: "scheduled_for field must be greater than current time:
+    #{Time.now}" }.to_json
   end
 end

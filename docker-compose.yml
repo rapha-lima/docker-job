@@ -1,14 +1,17 @@
 ---
-products:
+application:
   build: .
   command: bundle exec ruby app.rb
   ports:
   - "4567:4567"
   links:
-  - mongodb
-  - mongodb:mongodb.cloud66.local
+  - mariadb
+  - redis
   environment:
-    - RAILS_ENV=production
     - RACK_ENV=production
-mongodb:
-  image: mongo
+mariadb:
+  image: mariadb
+  environment:
+    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+redis:
+  image: redis

@@ -14,9 +14,9 @@ GEM
       tzinfo (~> 1.1)
     arel (7.1.1)
     concurrent-ruby (1.0.2)
+    connection_pool (2.2.0)
     i18n (0.7.0)
     minitest (5.9.0)
-    multi_json (1.12.1)
     mysql2 (0.4.4)
     rack (1.6.4)
     rack-conneg (0.1.5)
@@ -24,10 +24,12 @@ GEM
     rack-protection (1.5.3)
       rack
     rake (11.2.2)
-    representable (2.3.0)
-      uber (~> 0.0.7)
-    roar (1.0.4)
-      representable (>= 2.0.1, < 2.4.0)
+    redis (3.3.1)
+    sidekiq (4.1.4)
+      concurrent-ruby (~> 1.0)
+      connection_pool (~> 2.2, >= 2.2.0)
+      redis (~> 3.2, >= 3.2.1)
+      sinatra (>= 1.4.7)
     sinatra (1.4.7)
       rack (~> 1.5)
       rack-protection (~> 1.4)
@@ -39,19 +41,14 @@ GEM
     tilt (2.0.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    uber (0.0.15)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  multi_json
   mysql2
   rack-conneg
   rake
-  roar
+  sidekiq
   sinatra
   sinatra-activerecord
-
-BUNDLED WITH
-   1.12.5

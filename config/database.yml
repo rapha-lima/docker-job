@@ -1,6 +1,6 @@
 default: &default
   adapter: 'mysql2'
-  host: 'localhost'
+  host: <%= ENV.fetch("DATABASE_URL", 'mariadb') %>
   username: 'root'
   password: ''
 production:
@@ -9,3 +9,4 @@ production:
 development:
   <<: *default
   database: 'docker_job_dev'
+  host: 'localhost'

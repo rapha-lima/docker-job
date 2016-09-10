@@ -9,6 +9,5 @@ gem 'sinatra-activerecord'
 gem 'mysql2'
 gem 'rake'
 
-# Roar/Representable
-gem 'roar'
-gem 'multi_json'
+# Sidekiq
+gem 'sidekiq'
