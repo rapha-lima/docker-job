@@ -27,7 +27,6 @@ class JobManage
   def create(scheduled_for)
     Jobs.create(
       docker_image: @docker_image,
-      env_vars: @env_vars,
       scheduled_for: scheduled_for,
       status: 'SCHEDULED'
     )
