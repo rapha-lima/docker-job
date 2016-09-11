@@ -4,25 +4,32 @@ require_relative '../modules/jobs.rb'
 
 # Manage Jobs
 class JobManage
-  attr_accessor :job_id, :docker_image, :env_vars, :scheduled_for
+  attr_accessor :docker_image, :env_vars, :scheduled_for
 
-  def initialize(job_id, docker_image, env_vars, scheduled_for: nil)
-    @job_id = job_id
+  def initialize(docker_image, env_vars)
     @docker_image = docker_image
     @env_vars = env_vars
-    @scheduled_for = scheduled_for
   end
 
-  def run
+  def run(job_id)
     puts "Deu certo #{Time.now}.
     docker_image: #{@docker_image},
     env_vars: #{@env_vars}"
 
-    job = Jobs.find_by(id: @job_id)
+    job = Jobs.find_by(id: job_id)
     job.update_attributes(status: 'RUNNING')
 
     sleep 60
 
     job.update_attributes(status: 'DONE')
+  end
+
+  def create(scheduled_for)
+    Jobs.create(
+      docker_image: @docker_image,
+      env_vars: @env_vars,
+      scheduled_for: scheduled_for,
+      status: 'SCHEDULED'
+    )
   end
 end

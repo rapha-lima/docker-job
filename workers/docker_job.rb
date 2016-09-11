@@ -5,7 +5,7 @@ require_relative '../lib/job_manage.rb'
 class DockerJob
   include Sidekiq::Worker
   def perform(docker_image, env_vars, job_id)
-    job = JobManage.new(job_id, docker_image, env_vars)
-    job.run
+    job = JobManage.new(docker_image, env_vars)
+    job.run(job_id)
   end
 end

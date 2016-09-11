@@ -10,3 +10,7 @@ development:
   <<: *default
   database: 'docker_job_dev'
   host: 'localhost'
+test:
+  <<: *default
+  database: 'docker_job_test'
+  host: 'localhost'
