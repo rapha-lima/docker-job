@@ -14,21 +14,14 @@ describe 'POST /schedule' do
 
   context 'successful response' do
     it 'should return status 200' do
-      data = {
-        docker_image: 'redis',
-        scheduled_for: correct_time
-      }
-      post '/schedule', data.to_json
+      post '/schedule', docker_image: 'redis', scheduled_for: correct_time
       expect(last_response.status).to eq 200
     end
   end
 
   context 'missing docker_image' do
     it 'should return status 400' do
-      data = {
-        scheduled_for: correct_time
-      }
-      post '/schedule', data.to_json
+      post '/schedule', scheduled_for: correct_time
       expect(last_response.body).to eq({
         message: 'docker_image field cannot be empty'
       }.to_json)
@@ -38,10 +31,7 @@ describe 'POST /schedule' do
 
   context 'missing scheduled_for' do
     it 'should return status 400' do
-      data = {
-        docker_image: 'redis'
-      }
-      post '/schedule', data.to_json
+      post '/schedule', docker_image: 'redis'
       expect(last_response.body).to eq({
         message: 'scheduled_for field cannot be empty'
       }.to_json)
@@ -51,11 +41,7 @@ describe 'POST /schedule' do
 
   context 'wrong scheduled_for field' do
     it 'should return status 400' do
-      data = {
-        scheduled_for: wrong_time,
-        docker_image: 'redis'
-      }
-      post '/schedule', data.to_json
+      post '/schedule', scheduled_for: wrong_time, docker_image: 'redis'
       expect(last_response.body).to eq({
         message: "scheduled_for field must be greater than #{Time.now}"
       }.to_json)
@@ -80,6 +66,20 @@ describe 'GET /status/:id' do
         message: "Job id #{job_id} was not found"
       }.to_json)
       expect(last_response.status).to eq 400
+    end
+  end
+end
+
+describe 'PUT /callback/:id' do
+  context 'successful response' do
+    it 'with reschedule param set to true should return status 200' do
+      put '/callback/1', reschedule: 'true'
+      expect(last_response.status).to eq 200
+    end
+
+    it 'with reschedule param set to false should return status 200' do
+      put '/callback/1'
+      expect(last_response.status).to eq 200
     end
   end
 end

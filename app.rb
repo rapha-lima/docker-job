@@ -32,12 +32,9 @@ class App < Sinatra::Application
   end
 
   post '/schedule' do
-    content_type :json
-    req = JSON.load(request.body.read.to_s)
-
-    docker_image = req['docker_image']
-    scheduled_for = req['scheduled_for']
-    env_vars = req['env_vars']
+    docker_image = params[:docker_image]
+    scheduled_for = params[:scheduled_for]
+    env_vars = params[:env_vars]
 
     if docker_image.nil? || docker_image.empty?
       halt 400, { message: 'docker_image field cannot be empty' }.to_json
@@ -63,7 +60,7 @@ class App < Sinatra::Application
     job = Jobs.find_by(id: id)
 
     if reschedule == 'true'
-      scheduled_for = (job.scheduled_for + 10.minutes).to_datetime
+      scheduled_for = (Time.now + 10.minutes).to_datetime
       job.update_attributes(scheduled_for: scheduled_for, status: 'RESCHEDULED')
     elsif reschedule == 'false'
       job.update_attributes(status: 'DONE')
