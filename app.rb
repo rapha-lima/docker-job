@@ -6,14 +6,25 @@ Bundler.require
 
 require 'sinatra'
 require 'sinatra/activerecord'
+require 'sinatra/base'
 require 'time'
+require 'dotenv'
 require_relative 'modules/jobs.rb'
 require_relative 'workers/docker_job.rb'
 require_relative 'lib/job_manage.rb'
-require 'sinatra/base'
+require_relative 'runners/instance_create.rb'
+
+Dotenv.load
 
 # Modular Application
 class App < Sinatra::Application
+  # Create endpoint /aws to test class InstanceCreate.
+  # It will be removed later
+  get '/aws' do
+    aws = InstanceCreate.new('redis', 'SLEEP_TIME=20 VAR1="teste"', 1)
+    aws.run
+  end
+
   get '/list' do
     jobs = Jobs.all
     status 200

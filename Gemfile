@@ -11,6 +11,13 @@ gem 'rake'
 # Sidekiq
 gem 'sidekiq'
 
+# AWS SDK
+gem 'aws-sdk', '~> 2'
+
+# Dotenv
+gem 'dotenv'
+
+# RSpec
 group :developmen, :test do
   gem 'rspec'
   gem 'rack-test'

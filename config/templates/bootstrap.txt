@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "if curl -s http://169.254.169.254/latest/meta-data/spot/termination-time | grep -q .*T.*Z; then curl -X PUT %{app_host}/callback/%{job_id} -F 'reschedule="true"'; fi" >> /root/termination-time.sh
+chmod +x /root/termination-time.sh
+echo "* * * * * /root/termination-time.sh" >> /etc/crontab
+
+echo "Pull docker image"
+docker pull %{docker_image}
+
+echo "Run docker container"
+docker run -e %{env_vars} %{docker_image}
+echo "Finish docker container"
+
+echo "Running callback to inform application that the job is done"
+curl -X PUT %{app_host}/callback/%{job_id} -F 'reschedule="false"'
