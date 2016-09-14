@@ -9,82 +9,65 @@ require 'sinatra/activerecord'
 require 'sinatra/base'
 require 'time'
 require 'dotenv'
-require_relative 'modules/jobs.rb'
-require_relative 'workers/docker_job.rb'
-require_relative 'lib/job_manage.rb'
-require_relative 'runners/instance_create.rb'
+require_relative 'models/job.rb'
+require_relative 'runners/instance_manager.rb'
+require_relative 'modules/tools.rb'
 
 Dotenv.load
 
 # Modular Application
 class App < Sinatra::Application
-  # Create endpoint /aws to test class InstanceCreate.
-  # It will be removed later
-  get '/aws' do
-    aws = InstanceCreate.new('redis', 'SLEEP_TIME=20 VAR1="teste"', 1)
-    aws.run
-  end
+  include Tools
 
   get '/list' do
-    jobs = Jobs.all
     status 200
-    return jobs.to_json
+    Job.all.to_json
   end
 
   get '/status/:id' do
-    id = params[:id]
-    job = Jobs.where(id: id)
+    parse_body
+    job = Job.where(id: @response_body.id)
 
-    if job.nil? || job.empty?
-      halt 400, { message: "Job id #{id} was not found" }.to_json
-    else
-      return job.pluck(:status).to_json
-    end
+    validate_status_params(job)
+
+    job.pluck(:status)
   end
 
   post '/schedule' do
-    docker_image = params[:docker_image]
-    scheduled_for = params[:scheduled_for]
-    env_vars = params[:env_vars]
+    parse_body
 
-    if docker_image.nil? || docker_image.empty?
-      halt 400, { message: 'docker_image field cannot be empty' }.to_json
-    elsif scheduled_for.nil? || scheduled_for.empty?
-      halt 400, { message: 'scheduled_for field cannot be empty' }.to_json
-    else
-      scheduled_for = Time.parse(scheduled_for)
-      validate_time(scheduled_for)
+    validate_schedule_params
+    validate_time
 
-      job_created = JobManage.new(docker_image, env_vars).create(scheduled_for)
+    job = Job.create(
+      docker_image: @response_body[:docker_image],
+      scheduled_for: @response_body[:scheduled_for],
+      env_vars: @response_body[:env_vars],
+      status: 'SCHEDULE'
+    )
 
-      job_id = job_created.id
-      DockerJob.perform_in(scheduled_for, docker_image, env_vars, job_id)
+    # DockerJob.perform_in(@response_body[:scheduled_for], job.id)
 
-      job = Jobs.where(id: job_id).select(:id)
-      return job.to_json
-    end
+    job
   end
 
   put '/callback/:id' do
-    id = params[:id]
-    reschedule = params[:reschedule]
-    job = Jobs.find_by(id: id)
+    job = Jobs.find(params[:id])
 
-    if reschedule == 'true'
-      scheduled_for = (Time.now + 10.minutes).to_datetime
-      job.update_attributes(scheduled_for: scheduled_for, status: 'RESCHEDULED')
-    elsif reschedule == 'false'
+    if params[:reschedule]
+      job.update_attributes(scheduled_for: 10.minutes.from_now, status: 'RESCHEDULED')
+    else
       job.update_attributes(status: 'DONE')
     end
   end
 
   private
 
-  def validate_time(time)
-    if time < Time.now
-      message = "scheduled_for field must be greater than #{Time.now}"
-      halt 400, { message: message }.to_json
-    end
+  def parse_body
+    request.body.rewind
+    response_body = JSON.parse params.body.read
+    response_body['scheduled_for'] = Time.parse(response_body['scheduled_for']) if response_body['scheduled_for']
+    @response_body = response_body.symbolize_keys
   end
 
   # start the server if ruby file executed directly

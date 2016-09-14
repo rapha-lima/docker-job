@@ -1,10 +1,13 @@
-# Create Jobs
+require 'dotenv'
+
+# Create Job
 class CreateJobs < ActiveRecord::Migration
   def change
     create_table :jobs do |t|
       t.string :docker_image
-      t.string :scheduled_for
+      t.datetime :scheduled_for
       t.string :status
+      t.json :env_vars
     end
   end
 end

@@ -1,16 +1,16 @@
 default: &default
-  adapter: 'mysql2'
-  host: <%= ENV.fetch("DATABASE_URL", 'mariadb') %>
-  username: 'root'
-  password: ''
+  adapter: 'postgresql'
+  encoding: unicode
+  pool: <%= ENV.fetch("PG_POOL", 32) %>
 production:
   <<: *default
+  username: <%= ENV.fetch("DB_USER", 'docker_job_user') %>
+  password: <%= ENV.fetch("DB_USER", 'secret') %>
+  host: <%= ENV.fetch("DATABASE_URL", 'postgresql') %>
   database: 'docker_job_prod'
 development:
   <<: *default
   database: 'docker_job_dev'
-  host: 'localhost'
 test:
   <<: *default
   database: 'docker_job_test'
-  host: 'localhost'

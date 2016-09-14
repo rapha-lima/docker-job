@@ -5,7 +5,8 @@ gem 'sinatra'
 
 # Sinatra ActiveRecord Extension
 gem 'sinatra-activerecord'
-gem 'mysql2'
+gem 'activerecord'
+gem 'pg'
 gem 'rake'
 
 # Sidekiq

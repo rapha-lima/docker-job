@@ -1,6 +1,6 @@
 require 'sinatra/activerecord'
 require 'time'
-require_relative '../modules/jobs.rb'
+require_relative '../models/job.rb'
 
 # Manage Jobs
 class JobManage

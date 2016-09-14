@@ -12,10 +12,14 @@
 
 ActiveRecord::Schema.define(version: 20160905044351) do
 
-  create_table "jobs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.string "docker_image"
-    t.string "scheduled_for"
-    t.string "status"
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
+  create_table "jobs", force: :cascade do |t|
+    t.string   "docker_image"
+    t.datetime "scheduled_for"
+    t.string   "status"
+    t.json     "env_vars"
   end
 
 end
