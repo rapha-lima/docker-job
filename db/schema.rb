@@ -16,10 +16,11 @@ ActiveRecord::Schema.define(version: 20160905044351) do
   enable_extension "plpgsql"
 
   create_table "jobs", force: :cascade do |t|
-    t.string   "docker_image"
-    t.datetime "scheduled_for"
-    t.string   "status"
-    t.json     "env_vars"
+    t.string "docker_image"
+    t.json   "env_vars"
+    t.string "scheduled_for"
+    t.string "spot_instance_request_id"
+    t.string "status"
   end
 
 end

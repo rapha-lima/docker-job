@@ -11,12 +11,12 @@ require 'time'
 require 'dotenv'
 require 'json'
 require_relative 'models/job.rb'
-require_relative 'runners/instance_manager.rb'
 require_relative 'modules/tools.rb'
+require_relative 'workers/docker_job_initiator.rb'
 
 Dotenv.load
 
-# Modular Application
+# ./app.rb
 class App < Sinatra::Application
   include Tools
 
@@ -47,7 +47,7 @@ class App < Sinatra::Application
       status: 'SCHEDULED'
     )
 
-    DockerJob.perform_in(@response_body[:scheduled_for], job.id)
+    DockerJobInitiator.perform_in(@response_body[:scheduled_for], job.id)
 
     job.to_json
   end

@@ -8,7 +8,7 @@ echo "Pull docker image"
 docker pull %{docker_image}
 
 echo "Run docker container"
-docker run -e %{env_vars} %{docker_image}
+docker run %{env_vars} %{docker_image}
 echo "Finish docker container"
 
 echo "Running callback to inform application that the job is done"
