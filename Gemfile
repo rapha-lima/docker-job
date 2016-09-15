@@ -25,4 +25,5 @@ group :developmen, :test do
   %w(rspec-core rspec-expectations rspec-mocks rspec-support).each do |lib|
     gem lib
   end
+  gem 'pry-byebug'
 end

@@ -9,6 +9,7 @@ require 'sinatra/activerecord'
 require 'sinatra/base'
 require 'time'
 require 'dotenv'
+require 'json'
 require_relative 'models/job.rb'
 require_relative 'runners/instance_manager.rb'
 require_relative 'modules/tools.rb'
@@ -25,8 +26,7 @@ class App < Sinatra::Application
   end
 
   get '/status/:id' do
-    parse_body
-    job = Job.where(id: @response_body.id)
+    job = Job.where(id: params[:id])
 
     validate_status_params(job)
 
@@ -34,40 +34,34 @@ class App < Sinatra::Application
   end
 
   post '/schedule' do
-    parse_body
+    load_body
 
     validate_schedule_params
+    convert_time
     validate_time
 
     job = Job.create(
       docker_image: @response_body[:docker_image],
       scheduled_for: @response_body[:scheduled_for],
       env_vars: @response_body[:env_vars],
-      status: 'SCHEDULE'
+      status: 'SCHEDULED'
     )
 
-    # DockerJob.perform_in(@response_body[:scheduled_for], job.id)
+    DockerJob.perform_in(@response_body[:scheduled_for], job.id)
 
-    job
+    job.to_json
   end
 
   put '/callback/:id' do
+    load_body
+
     job = Jobs.find(params[:id])
 
     if params[:reschedule]
-      job.update_attributes(scheduled_for: 10.minutes.from_now, status: 'RESCHEDULED')
+      job.update_attributes(scheduled_for: 5.minutes.from_now, status: 'SCHEDULED')
     else
       job.update_attributes(status: 'DONE')
     end
-  end
-
-  private
-
-  def parse_body
-    request.body.rewind
-    response_body = JSON.parse params.body.read
-    response_body['scheduled_for'] = Time.parse(response_body['scheduled_for']) if response_body['scheduled_for']
-    @response_body = response_body.symbolize_keys
   end
 
   # start the server if ruby file executed directly
