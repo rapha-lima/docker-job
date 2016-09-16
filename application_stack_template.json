@@ -1,0 +1,81 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "07ad04c1-6dde-4828-b2b2-0175476fa656": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 414,
+          "y": 103
+        },
+        "z": 0,
+        "embeds": [],
+        "ismemberof": [
+          "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
+        ]
+      },
+      "3148ff1e-0366-436c-bcb2-5becebaf4f2e": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 260,
+          "y": 100
+        },
+        "z": 0,
+        "embeds": []
+      },
+      "0d5bf18d-51b8-4771-bda6-03d3e4b0d509": {
+        "source": {
+          "id": "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        },
+        "target": {
+          "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
+        },
+        "z": 1
+      }
+    }
+  },
+  "Resources": {
+    "EC2I260E": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-6bb2d67c",
+        "InstanceType": "t2.medium",
+        "KeyName": "ec2-raphinha",
+        "SecurityGroupIds": [
+          {
+            "Ref": "EC2SG56W25"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        }
+      }
+    },
+    "EC2SG56W25": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
+        }
+      }
+    }
+  }
+}

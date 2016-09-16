@@ -1,29 +1,29 @@
 ---
 application:
   build: .
-  command: bundle exec ruby app.rb
-  ports:
-  - "4567:4567"
   links:
-  - mariadb
+  - postgres
   - redis
   environment:
     - RACK_ENV=production
     - REDIS_HOST=redis
     - REDIS_PORT=6379
+  env_file: .env
+  command: bundle exec ruby app.rb
+  ports:
+  - "80:4567"
 sidekiq:
   build: .
-  command: bundle exec sidekiq -r ./workers/docker_job.rb
   links:
-    - mariadb
-    - redis
+  - postgres
+  - redis
   environment:
     - RACK_ENV=production
     - REDIS_HOST=redis
-    - REDIS_PORT=6379  
-mariadb:
-  image: mariadb
-  environment:
-    - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    - REDIS_PORT=6379
+  env_file: .env
+  command: bundle exec sidekiq -r ./app.rb
+postgres:
+  image: postgres
 redis:
   image: redis

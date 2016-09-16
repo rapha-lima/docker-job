@@ -4,9 +4,8 @@ default: &default
   pool: <%= ENV.fetch("PG_POOL", 32) %>
 production:
   <<: *default
-  username: <%= ENV.fetch("DB_USER", 'docker_job_user') %>
-  password: <%= ENV.fetch("DB_USER", 'secret') %>
-  host: <%= ENV.fetch("DATABASE_URL", 'postgresql') %>
+  username: <%= ENV.fetch("POSTGRES_USER", 'postgres') %>
+  host: <%= ENV.fetch("DATABASE_URL", 'postgres') %>
   database: 'docker_job_prod'
 development:
   <<: *default
