@@ -18,6 +18,9 @@ gem 'aws-sdk', '~> 2'
 # Dotenv
 gem 'dotenv'
 
+# Tools
+gem 'settingslogic'
+
 # RSpec
 group :developmen, :test do
   gem 'rspec'

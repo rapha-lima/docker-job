@@ -6,7 +6,7 @@ class CreateJobs < ActiveRecord::Migration
     create_table  :jobs do |t|
       t.string    :docker_image
       t.json      :env_vars
-      t.string    :scheduled_for
+      t.datetime  :scheduled_for
       t.string    :spot_instance_request_id
       t.string    :status
     end

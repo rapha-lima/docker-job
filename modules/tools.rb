@@ -20,7 +20,7 @@ module Tools
     @response_body = response_body.symbolize_keys
   end
 
-  def convert_time
+  def parse_time
     @response_body[:scheduled_for] = Time.parse(@response_body[:scheduled_for])
   end
 end

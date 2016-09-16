@@ -11,18 +11,29 @@ require 'time'
 require 'dotenv'
 require 'json'
 require_relative 'models/job.rb'
+require_relative 'models/configuration.rb'
+require_relative 'models/job_status.rb'
 require_relative 'modules/tools.rb'
 require_relative 'workers/docker_job_initiator.rb'
+require_relative 'workers/docker_job_finisher.rb'
 
 Dotenv.load
 
-# ./app.rb
 class App < Sinatra::Application
   include Tools
 
   get '/list' do
     status 200
-    Job.all.to_json
+    Job.all.map do |job|
+      {
+        id: job.id,
+        docker_image: job.docker_image,
+        env_vars: job.env_vars,
+        schedule_for: job.scheduled_for.in_time_zone('America/Sao_Paulo'),
+        spot_instance_request_id: job.spot_instance_request_id,
+        status: job.status
+      }
+    end.to_json
   end
 
   get '/status/:id' do
@@ -37,14 +48,14 @@ class App < Sinatra::Application
     load_body
 
     validate_schedule_params
-    convert_time
+    parse_time
     validate_time
 
     job = Job.create(
       docker_image: @response_body[:docker_image],
       scheduled_for: @response_body[:scheduled_for],
       env_vars: @response_body[:env_vars],
-      status: 'SCHEDULED'
+      status: JobStatus.schedule
     )
 
     DockerJobInitiator.perform_in(@response_body[:scheduled_for], job.id)
@@ -55,13 +66,19 @@ class App < Sinatra::Application
   put '/callback/:id' do
     load_body
 
-    job = Jobs.find(params[:id])
+    job = Job.find(params[:id])
 
-    if params[:reschedule]
-      job.update_attributes(scheduled_for: 5.minutes.from_now, status: 'SCHEDULED')
+    # schedule job again if spot instance receive spot termination-time
+    if @response_body[:schedule]
+      schedule_for = 5.minutes.from_now
+      job.update_attributes(scheduled_for: schedule_for, status: JobStatus.schedule)
+
+      DockerJobInitiator.perform_in(5.minutes.from_now, job.id)
     else
-      job.update_attributes(status: 'DONE')
+      DockerJobFinisher.perform_async(job.id)
     end
+
+    job.to_json
   end
 
   # start the server if ruby file executed directly

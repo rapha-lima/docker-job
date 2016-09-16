@@ -1,34 +1,40 @@
 require 'aws-sdk'
 require 'base64'
 
-# ./runners/instance_manager.rb
 class InstanceManager
   USER_DATA_FILE = File.read('config/templates/bootstrap.txt').freeze
-  SPOT_INSTANCE_CONFIG = YAML.load_file('config/spot_instance_configuration.yml').freeze
 
   attr_accessor :job_id
 
   def initialize(job_id)
     @job = Job.find(job_id)
-    @config = SPOT_INSTANCE_CONFIG
-    @launch_specification = @config['launch_specification']
   end
 
   def create
     response = ec2_client.request_spot_instances(
-      instance_count: @config['instance_count'],
+      instance_count: Configuration.instance_count,
       launch_specification: {
-        image_id: @launch_specification['image_id'],
-        instance_type: @launch_specification['instance_type'],
-        key_name: @launch_specification['key_name'],
+        image_id: Configuration.launch_specification.image_id,
+        instance_type: Configuration.launch_specification.instance_type,
+        key_name: Configuration.launch_specification.key_name,
         user_data: load_user_data
       },
-      spot_price: @config['spot_price'].to_s,
-      type: @config['type']
+      spot_price: Configuration.spot_price,
+      type: Configuration.type
     )
-    resp_id = response.spot_instance_requests[0].spot_instance_request_id
+    spot_instance_request_id = response.spot_instance_requests[0].spot_instance_request_id
 
-    @job.update_attributes(spot_instance_request_id: resp_id)
+    @job.update_attributes(
+      spot_instance_request_id: spot_instance_request_id
+    )
+  end
+
+  def remove
+    response = ec2_client.describe_spot_instance_requests(spot_instance_request_ids: [@job.spot_instance_request_id])
+    instance_id = response.spot_instance_requests[0].instance_id
+
+    ec2_client.cancel_spot_instance_requests(spot_instance_request_ids: [@job.spot_instance_request_id])
+    ec2_client.terminate_instances(instance_ids: [instance_id])
   end
 
   private
@@ -44,11 +50,7 @@ class InstanceManager
   end
 
   def env_vars_to_docker
-    docker_env = []
-    @job.env_vars.each do |key, value|
-      docker_env << "-e #{key}=#{value}"
-    end
-    docker_env.join(' ')
+    @job.env_vars.map { |key, value| "-e #{key}=#{value}" }.join(' ')
   end
 
   def ec2_client
