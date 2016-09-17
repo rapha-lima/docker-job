@@ -8,13 +8,16 @@
           "height": 60
         },
         "position": {
-          "x": 410,
+          "x": 420,
           "y": 150
         },
-        "z": 0,
+        "z": 1,
         "embeds": [],
         "ismemberof": [
           "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
+        ],
+        "isrelatedto": [
+          "0b6dd67b-b622-4c50-b3c7-5ab685a3e988"
         ]
       },
       "3148ff1e-0366-436c-bcb2-5becebaf4f2e": {
@@ -24,9 +27,9 @@
         },
         "position": {
           "x": 300,
-          "y": 50
+          "y": 60
         },
-        "z": 0,
+        "z": 1,
         "embeds": []
       },
       "0d5bf18d-51b8-4771-bda6-03d3e4b0d509": {
@@ -44,10 +47,10 @@
           "height": 60
         },
         "position": {
-          "x": 410,
-          "y": 50
+          "x": 420,
+          "y": 60
         },
-        "z": 0,
+        "z": 1,
         "embeds": [],
         "isconnectedto": [
           "07ad04c1-6dde-4828-b2b2-0175476fa656"
@@ -68,10 +71,10 @@
           "height": 60
         },
         "position": {
-          "x": 292.11974574895527,
-          "y": 147.08982990917013
+          "x": 300,
+          "y": 150
         },
-        "z": 0,
+        "z": 1,
         "embeds": []
       },
       "c01ae690-102d-49c5-b983-3868954afdc4": {
@@ -82,6 +85,30 @@
           "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
         },
         "z": 11
+      },
+      "0b6dd67b-b622-4c50-b3c7-5ab685a3e988": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "8b7826bf-449a-4a48-8d75-40c8a676530b"
+        ]
+      },
+      "8d62c46e-de87-46d0-80ce-7bfb24fb3ed1": {
+        "source": {
+          "id": "4ca9af5e-351c-4221-a8d7-45f5549211e3"
+        },
+        "target": {
+          "id": "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        },
+        "z": 12
       }
     }
   },
@@ -94,120 +121,128 @@
         "KeyName": "docker-job",
         "UserData": {
           "Fn::Base64": {
-              "Fn::Join": [
-                  "",
-                  [
-                    "#!/bin/bash\n",
-                    "# Deploy docker-job application and run it\n",
-                    "# Verion 0.0.1\n",
-                    "set -x\n",
-                    "\n",
-                    "# Signal aws cloud formation\n",
-                    "# TODO: this is aws specific now and should be somewhere else\n",
-                    "function send_signal {\n",
-                    "\n",
-                    "echo \"SENDING $1\"\n",
-                    "/opt/aws/bin/cfn-signal -e $1 ",
-                    "--stack ", { "Ref": "AWS::StackName" },
-                    "--resource ApplicationInstance ",
-                    "--region ", { "Ref" : "AWS::Region" },
-                    "\n",
-                    "}\n",
-                    "\n",
-                    "# Set instance public_ip\n",
-                    "PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)\n",
-                    "\n",
-                    "# Install essentials packages\n",
-                    "yum update -y\n",
-                    "yum install git -y\n",
-                    "\n",
-                    "# Install Docker Compose\n",
-                    "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose\n",
-                    "chmod +x /usr/local/bin/docker-compose\n",
-                    "\n",
-                    "# Install aws bootstrap\n",
-                    "echo \"Installing wget\"\n",
-                    "yum install wget unzip -y\n",
-                    "\n",
-                    "echo \"Fetching aws bootstrap\"\n",
-                    "cd /opt\n",
-                    "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
-                    "\n",
-                    "echo \"Unpackaging bootstrap\"\n",
-                    "tar xfv aws-cfn-bootstrap-latest.tar.gz && rm -f aws-cfn-bootstrap-latest.tar.gz\n",
-                    "\n",
-                    "cd aws-cfn-bootstrap-*\n",
-                    "\n",
-                    "echo \"Installing bootstrap\"\n",
-                    "python setup.py build\n",
-                    "python setup.py install\n",
-                    "\n",
-                    "echo \"Configuring cfn-signal\"\n",
-                    "chmod +x /opt/aws-cfn-bootstrap-1.4/bin/cfn-signal\n",
-                    "ln -s /opt/aws-cfn-bootstrap-*/bin/cfn-signal /opt/aws/bin/cfn-signal\n",
-                    "\n",
-                    "# Install application\n",
-                    "cd /opt\n",
-                    "\n",
-                    "echo \"Clonning git repository\"\n",
-                    "if ! git clone https://github.com/rapha-lima/docker-job.git; then\n",
-                    "  send_signal 1\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "echo \"Configuring application .env\"\n",
-                    "cd docker-job\n",
-                    "cp .env.example .env\n",
-                    "if ! sed -i \"s/APP_HOST=.*/APP_HOST=http:\\/\\/$PUBLIC_IP/g\" .env; then\n",
-                    "  send_signal 1\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "echo \"Building application and creating database\"\n",
-                    "if ! /usr/local/bin/docker-compose run application rake db:create; then\n",
-                    "  send_signal 1\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "echo \"Running db:migrate\"\n",
-                    "if ! /usr/local/bin/docker-compose run application rake db:migrate; then\n",
-                    "  send_signal\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "echo \"Running application containers\"\n",
-                    "if ! /usr/local/bin/docker-compose up -d; then\n",
-                    "  send_signal 1\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "sleep 60\n",
-                    "echo \"Testing application endpoint\"\n",
-                    "if ! curl http://$PUBLIC_IP/list; then\n",
-                    "  send_signal 1\n",
-                    "  exit 1\n",
-                    "fi\n",
-                    "\n",
-                    "# Puting docker-compose up in rc.local to initiate in case of reboot\n",
-                    "echo \"cd /opt/docker-job; /usr/local/bin/docker-compose up -d\" >> /etc/rc.local\n",
-                    "\n",
-                    "# Success\n",
-                    "echo \"SUCCESS\"\n",
-                    "send_signal 0\n"
-                  ]
-                ]
-              }
-            },
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "# Deploy docker-job application and run it\n",
+                "# Verion 0.0.1\n",
+                "set -x\n",
+                "\n",
+                "# Signal aws cloud formation\n",
+                "# TODO: this is aws specific now and should be somewhere else\n",
+                "function send_signal {\n",
+                "\n",
+                "echo \"SENDING $1\"\n",
+                "/opt/aws/bin/cfn-signal -e $1 ",
+                "--stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource ApplicationInstance ",
+                "--region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "}\n",
+                "\n",
+                "# Set instance public_ip\n",
+                "PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)\n",
+                "\n",
+                "# Install essentials packages\n",
+                "yum update -y\n",
+                "yum install git -y\n",
+                "\n",
+                "# Install Docker Compose\n",
+                "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose\n",
+                "chmod +x /usr/local/bin/docker-compose\n",
+                "\n",
+                "# Install aws bootstrap\n",
+                "echo \"Installing wget\"\n",
+                "yum install wget unzip -y\n",
+                "\n",
+                "echo \"Fetching aws bootstrap\"\n",
+                "cd /opt\n",
+                "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+                "\n",
+                "echo \"Unpackaging bootstrap\"\n",
+                "tar xfv aws-cfn-bootstrap-latest.tar.gz && rm -f aws-cfn-bootstrap-latest.tar.gz\n",
+                "\n",
+                "cd aws-cfn-bootstrap-*\n",
+                "\n",
+                "echo \"Installing bootstrap\"\n",
+                "python setup.py build\n",
+                "python setup.py install\n",
+                "\n",
+                "echo \"Configuring cfn-signal\"\n",
+                "chmod +x /opt/aws-cfn-bootstrap-1.4/bin/cfn-signal\n",
+                "ln -s /opt/aws-cfn-bootstrap-*/bin/cfn-signal /opt/aws/bin/cfn-signal\n",
+                "\n",
+                "# Install application\n",
+                "cd /opt\n",
+                "\n",
+                "echo \"Clonning git repository\"\n",
+                "if ! git clone https://github.com/rapha-lima/docker-job.git; then\n",
+                "  send_signal 1\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "echo \"Configuring application .env\"\n",
+                "cd docker-job\n",
+                "cp .env.example .env\n",
+                "if ! sed -i \"s/APP_HOST=.*/APP_HOST=http:\\/\\/$PUBLIC_IP/g\" .env; then\n",
+                "  send_signal 1\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "echo \"Building application and creating database\"\n",
+                "if ! /usr/local/bin/docker-compose run application rake db:create; then\n",
+                "  send_signal 1\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "echo \"Running db:migrate\"\n",
+                "if ! /usr/local/bin/docker-compose run application rake db:migrate; then\n",
+                "  send_signal\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "echo \"Running application containers\"\n",
+                "if ! /usr/local/bin/docker-compose up -d; then\n",
+                "  send_signal 1\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "sleep 60\n",
+                "echo \"Testing application endpoint\"\n",
+                "if ! curl http://$PUBLIC_IP/list; then\n",
+                "  send_signal 1\n",
+                "  exit 1\n",
+                "fi\n",
+                "\n",
+                "# Puting docker-compose up in rc.local to initiate in case of reboot\n",
+                "echo \"cd /opt/docker-job; /usr/local/bin/docker-compose up -d\" >> /etc/rc.local\n",
+                "\n",
+                "# Success\n",
+                "echo \"SUCCESS\"\n",
+                "send_signal 0\n"
+              ]
+            ]
+          }
+        },
         "SecurityGroupIds": [
           {
             "Ref": "ApplicationSG"
           }
         ],
-        "IamInstanceProfile": { "Ref": "RootInstanceProfile"}
+        "IamInstanceProfile": {
+          "Ref": "RootInstanceProfile"
+        }
       },
-      "CreationPolicy" : {
-        "ResourceSignal" : {
-          "Timeout" : "PT15M"
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Timeout": "PT15M"
         }
       },
       "Metadata": {
@@ -225,6 +260,12 @@
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
             "CidrIp": "0.0.0.0/0"
           }
         ]
@@ -304,6 +345,11 @@
             "Ref": "RootRole"
           }
         ]
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "0b6dd67b-b622-4c50-b3c7-5ab685a3e988"
+        }
       }
     }
   }

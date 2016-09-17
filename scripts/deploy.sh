@@ -15,5 +15,6 @@ if ! type aws >> /dev/null ; then
 fi
 
 aws ec2 create-key-pair --key-name docker-job --region us-east-1 --query 'KeyMaterial' --output text > docker-job.pem
+chmod 600 docker-job.pem
 
 aws cloudformation create-stack --stack-name DockerJob --template-body file://application_stack_template.json --region us-east-1 --capabilities CAPABILITY_IAM
