@@ -1,7 +1,7 @@
 require 'aws-sdk'
 require 'base64'
 
-class InstanceManager
+class SpotInstanceManager
   USER_DATA_FILE = File.read('config/templates/bootstrap.txt').freeze
 
   attr_accessor :job_id

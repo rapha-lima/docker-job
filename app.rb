@@ -14,7 +14,7 @@ require_relative 'models/job.rb'
 require_relative 'models/configuration.rb'
 require_relative 'models/job_status.rb'
 require_relative 'modules/tools.rb'
-require_relative 'workers/docker_job_initiator.rb'
+require_relative 'workers/docker_job_initializer.rb'
 require_relative 'workers/docker_job_finisher.rb'
 
 Dotenv.load
@@ -58,7 +58,7 @@ class App < Sinatra::Application
       status: JobStatus.schedule
     )
 
-    DockerJobInitiator.perform_in(@response_body[:scheduled_for], job.id)
+    DockerJobInitializer.perform_in(@response_body[:scheduled_for], job.id)
 
     job.to_json
   end
@@ -73,7 +73,7 @@ class App < Sinatra::Application
       schedule_for = 5.minutes.from_now
       job.update_attributes(scheduled_for: schedule_for, status: JobStatus.schedule)
 
-      DockerJobInitiator.perform_in(5.minutes.from_now, job.id)
+      DockerJobInitializer.perform_in(5.minutes.from_now, job.id)
     else
       DockerJobFinisher.perform_async(job.id)
     end
