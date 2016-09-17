@@ -91,7 +91,7 @@
       "Properties": {
         "ImageId": "ami-6bb2d67c",
         "InstanceType": "t2.medium",
-        "KeyName": "ecs-raphinha",
+        "KeyName": "docker-job",
         "UserData": {
           "Fn::Base64": {
               "Fn::Join": [
@@ -109,7 +109,7 @@
                     "echo \"SENDING $1\"\n",
                     "/opt/aws/bin/cfn-signal -e $1 ",
                     "--stack ", { "Ref": "AWS::StackName" },
-                    "--resource ApplicationInstance",
+                    "--resource ApplicationInstance ",
                     "--region ", { "Ref" : "AWS::Region" },
                     "\n",
                     "}\n",
@@ -139,7 +139,7 @@
                     "cd aws-cfn-bootstrap-*\n",
                     "\n",
                     "echo \"Installing bootstrap\"\n",
-                    "python setup.py install\n",
+                    "python setup.py build\n",
                     "python setup.py install\n",
                     "\n",
                     "echo \"Configuring cfn-signal\"\n",
@@ -181,6 +181,7 @@
                     "  exit 1\n",
                     "fi\n",
                     "\n",
+                    "sleep 60\n",
                     "echo \"Testing application endpoint\"\n",
                     "if ! curl http://$PUBLIC_IP/list; then\n",
                     "  send_signal 1\n",
@@ -206,7 +207,7 @@
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Timeout" : "PT30M"
+          "Timeout" : "PT15M"
         }
       },
       "Metadata": {

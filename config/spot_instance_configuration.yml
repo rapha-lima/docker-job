@@ -2,7 +2,7 @@ configuration:
   launch_specification:
     image_id: ami-6bb2d67c
     instance_type: m3.medium
-    key_name: ecs-raphinha
+    key_name: docker-job
   spot_price: '0.035'
   type: one-time
   instance_count: 1
