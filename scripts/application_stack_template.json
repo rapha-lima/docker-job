@@ -86,7 +86,7 @@
     }
   },
   "Resources": {
-    "EC2I260E": {
+    "ApplicationInstance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "ImageId": "ami-6bb2d67c",
@@ -107,17 +107,10 @@
                     "function send_signal {\n",
                     "\n",
                     "echo \"SENDING $1\"\n",
-                    "cfn-signal -e $1 \\",
-                    "--stack \\",
-                    {
-                      "Ref": "AWS::StackName"
-                    },
-                    " \\",
-                    "--resource \\",
-                    "EC2I260E",
-                    " \\",
-                    "--region \\",
-                    "us-east-1",
+                    "/opt/aws/bin/cfn-signal -e $1 ",
+                    "--stack ", { "Ref": "AWS::StackName" },
+                    "--resource ApplicationInstance",
+                    "--region ", { "Ref" : "AWS::Region" }
                     "\n",
                     "}\n",
                     "\n",
@@ -137,6 +130,7 @@
                     "yum install wget unzip -y\n",
                     "\n",
                     "echo \"Fetching aws bootstrap\"\n",
+                    "cd /opt\n",
                     "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
                     "\n",
                     "echo \"Unpackaging bootstrap\"\n",
@@ -146,6 +140,11 @@
                     "\n",
                     "echo \"Installing bootstrap\"\n",
                     "python setup.py install\n",
+                    "python setup.py install\n",
+                    "\n",
+                    "echo \"Configuring cfn-signal\"\n",
+                    "chmod +x /opt/aws-cfn-bootstrap-1.4/bin/cfn-signal\n",
+                    "ln -s /opt/aws-cfn-bootstrap-*/bin/cfn-signal /opt/aws/bin/cfn-signal\n",
                     "\n",
                     "# Install application\n",
                     "cd /opt\n",
@@ -200,10 +199,15 @@
             },
         "SecurityGroupIds": [
           {
-            "Ref": "EC2SG56W25"
+            "Ref": "ApplicationSG"
           }
         ],
         "IamInstanceProfile": { "Ref": "RootInstanceProfile"}
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT30M"
+        }
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -211,7 +215,7 @@
         }
       }
     },
-    "EC2SG56W25": {
+    "ApplicationSG": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "SG",
@@ -230,11 +234,11 @@
         }
       }
     },
-    "EC2EIPRFG4": {
+    "EC2EIP": {
       "Type": "AWS::EC2::EIP",
       "Properties": {
         "InstanceId": {
-          "Ref": "EC2I260E"
+          "Ref": "ApplicationInstance"
         }
       },
       "Metadata": {
