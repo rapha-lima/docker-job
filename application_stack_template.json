@@ -8,8 +8,8 @@
           "height": 60
         },
         "position": {
-          "x": 414,
-          "y": 103
+          "x": 410,
+          "y": 150
         },
         "z": 0,
         "embeds": [],
@@ -23,8 +23,8 @@
           "height": 60
         },
         "position": {
-          "x": 260,
-          "y": 100
+          "x": 300,
+          "y": 50
         },
         "z": 0,
         "embeds": []
@@ -37,6 +37,51 @@
           "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
         },
         "z": 1
+      },
+      "4ca9af5e-351c-4221-a8d7-45f5549211e3": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 410,
+          "y": 50
+        },
+        "z": 0,
+        "embeds": [],
+        "isconnectedto": [
+          "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        ]
+      },
+      "0cf69cfc-e5be-4ef2-a68d-ca65f752cf94": {
+        "source": {
+          "id": "4ca9af5e-351c-4221-a8d7-45f5549211e3"
+        },
+        "target": {
+          "id": "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        },
+        "z": 11
+      },
+      "8b7826bf-449a-4a48-8d75-40c8a676530b": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 292.11974574895527,
+          "y": 147.08982990917013
+        },
+        "z": 0,
+        "embeds": []
+      },
+      "c01ae690-102d-49c5-b983-3868954afdc4": {
+        "source": {
+          "id": "07ad04c1-6dde-4828-b2b2-0175476fa656"
+        },
+        "target": {
+          "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
+        },
+        "z": 11
       }
     }
   },
@@ -46,12 +91,119 @@
       "Properties": {
         "ImageId": "ami-6bb2d67c",
         "InstanceType": "t2.medium",
-        "KeyName": "ec2-raphinha",
+        "KeyName": "ecs-raphinha",
+        "UserData": {
+          "Fn::Base64": {
+              "Fn::Join": [
+                  "",
+                  [
+                    "#!/bin/bash\n",
+                    "# Deploy docker-job application and run it\n",
+                    "# Verion 0.0.1\n",
+                    "set -x\n",
+                    "\n",
+                    "# Signal aws cloud formation\n",
+                    "# TODO: this is aws specific now and should be somewhere else\n",
+                    "function send_signal {\n",
+                    "\n",
+                    "echo \"SENDING $1\"\n",
+                    "cfn-signal -e $1 \\",
+                    "--stack \\",
+                    {
+                      "Ref": "AWS::StackName"
+                    },
+                    " \\",
+                    "--resource \\",
+                    "EC2I260E",
+                    " \\",
+                    "--region \\",
+                    "us-east-1",
+                    "\n",
+                    "}\n",
+                    "\n",
+                    "# Set instance public_ip\n",
+                    "PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)\n",
+                    "\n",
+                    "# Install essentials packages\n",
+                    "yum update -y\n",
+                    "yum install git -y\n",
+                    "\n",
+                    "# Install Docker Compose\n",
+                    "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose\n",
+                    "chmod +x /usr/local/bin/docker-compose\n",
+                    "\n",
+                    "# Install aws bootstrap\n",
+                    "echo \"Installing wget\"\n",
+                    "yum install wget unzip -y\n",
+                    "\n",
+                    "echo \"Fetching aws bootstrap\"\n",
+                    "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+                    "\n",
+                    "echo \"Unpackaging bootstrap\"\n",
+                    "tar xfv aws-cfn-bootstrap-latest.tar.gz && rm -f aws-cfn-bootstrap-latest.tar.gz\n",
+                    "\n",
+                    "cd aws-cfn-bootstrap-*\n",
+                    "\n",
+                    "echo \"Installing bootstrap\"\n",
+                    "python setup.py install\n",
+                    "\n",
+                    "# Install application\n",
+                    "cd /opt\n",
+                    "\n",
+                    "echo \"Clonning git repository\"\n",
+                    "if ! git clone https://github.com/rapha-lima/docker-job.git; then\n",
+                    "  send_signal 1\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "echo \"Configuring application .env\"\n",
+                    "cd docker-job\n",
+                    "cp .env.example .env\n",
+                    "if ! sed -i \"s/APP_HOST=.*/APP_HOST=http:\\/\\/$PUBLIC_IP/g\" .env; then\n",
+                    "  send_signal 1\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "echo \"Building application and creating database\"\n",
+                    "if ! /usr/local/bin/docker-compose run application rake db:create; then\n",
+                    "  send_signal 1\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "echo \"Running db:migrate\"\n",
+                    "if ! /usr/local/bin/docker-compose run application rake db:migrate; then\n",
+                    "  send_signal\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "echo \"Running application containers\"\n",
+                    "if ! /usr/local/bin/docker-compose up -d; then\n",
+                    "  send_signal 1\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "echo \"Testing application endpoint\"\n",
+                    "if ! curl http://$PUBLIC_IP/list; then\n",
+                    "  send_signal 1\n",
+                    "  exit 1\n",
+                    "fi\n",
+                    "\n",
+                    "# Puting docker-compose up in rc.local to initiate in case of reboot\n",
+                    "echo \"cd /opt/docker-job; /usr/local/bin/docker-compose up -d\" >> /etc/rc.local\n",
+                    "\n",
+                    "# Success\n",
+                    "echo \"SUCCESS\"\n",
+                    "send_signal 0\n"
+                  ]
+                ]
+              }
+            },
         "SecurityGroupIds": [
           {
             "Ref": "EC2SG56W25"
           }
-        ]
+        ],
+        "IamInstanceProfile": { "Ref": "RootInstanceProfile"}
       },
       "Metadata": {
         "AWS::CloudFormation::Designer": {
@@ -62,6 +214,7 @@
     "EC2SG56W25": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
+        "GroupDescription": "SG",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
@@ -75,6 +228,77 @@
         "AWS::CloudFormation::Designer": {
           "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
         }
+      }
+    },
+    "EC2EIPRFG4": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "EC2I260E"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "4ca9af5e-351c-4221-a8d7-45f5549211e3"
+        }
+      }
+    },
+    "RootRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "ec2-access",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1433702475000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:*"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/"
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "8b7826bf-449a-4a48-8d75-40c8a676530b"
+        }
+      }
+    },
+    "RootInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "RootRole"
+          }
+        ]
       }
     }
   }
