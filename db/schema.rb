@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(version: 20160905044351) do
     t.json     "env_vars"
     t.datetime "scheduled_for"
     t.string   "spot_instance_request_id"
+    t.string   "error_message"
     t.string   "status"
   end
 

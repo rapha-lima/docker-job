@@ -10,6 +10,7 @@ require 'sinatra/base'
 require 'time'
 require 'dotenv'
 require 'json'
+require 'pry'
 require_relative 'models/job.rb'
 require_relative 'models/configuration.rb'
 require_relative 'models/job_status.rb'
@@ -31,6 +32,7 @@ class App < Sinatra::Application
         env_vars: job.env_vars,
         schedule_for: job.scheduled_for.in_time_zone('America/Sao_Paulo'),
         spot_instance_request_id: job.spot_instance_request_id,
+        error_message: job.error_message,
         status: job.status
       }
     end.to_json
@@ -66,19 +68,18 @@ class App < Sinatra::Application
   put '/callback/:id' do
     load_body
 
-    job = Job.find(params[:id])
+    @job = Job.find(params[:id])
 
-    # schedule job again if spot instance receive spot termination-time
     if @response_body[:schedule]
       schedule_for = 5.minutes.from_now
-      job.update_attributes(scheduled_for: schedule_for, status: JobStatus.schedule)
+      @job.update_attributes(scheduled_for: schedule_for, status: JobStatus.schedule)
 
-      DockerJobInitializer.perform_in(5.minutes.from_now, job.id)
+      DockerJobInitializer.perform_in(5.minutes.from_now, @job.id)
     else
-      DockerJobFinisher.perform_async(job.id)
-    end
+      verify_callback_failed_param
 
-    job.to_json
+      DockerJobFinisher.perform_async(@job.id)
+    end
   end
 
   # start the server if ruby file executed directly

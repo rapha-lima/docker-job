@@ -8,6 +8,7 @@ class CreateJobs < ActiveRecord::Migration
       t.json      :env_vars
       t.datetime  :scheduled_for
       t.string    :spot_instance_request_id
+      t.string    :error_message
       t.string    :status
     end
   end

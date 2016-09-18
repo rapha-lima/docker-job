@@ -5,9 +5,6 @@ class DockerJobFinisher
   include Sidekiq::Worker
 
   def perform(job_id)
-    job = Job.find(job_id)
-    job.update_attributes(status: JobStatus.done)
-
-    SpotInstanceManager.new(job.id).remove
+    SpotInstanceManager.new(job_id).remove
   end
 end

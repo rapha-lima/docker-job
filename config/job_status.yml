@@ -2,3 +2,4 @@ status:
   schedule: SCHEDULED
   done: DONE
   running: RUNNING
+  failed: FAILED

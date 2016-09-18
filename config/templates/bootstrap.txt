@@ -1,15 +1,43 @@
 #!/bin/bash
+# This script will run a Docker-based job.
 
-echo "if curl -s http://169.254.169.254/latest/meta-data/spot/termination-time | grep -q .*T.*Z; then curl -X PUT -d { "schedule": "" } %{app_host}/callback/%{job_id}; fi" >> /root/termination-time.sh
+# Set callback host
+app_host=%{app_host}
+
+#Set job id
+job_id=%{job_id}
+
+# Set callback call to mark job as done.
+function callback_job_done {
+  curl -X PUT -d {} $app_host/callback/$job_id
+}
+
+# Set callback call to schedule job again
+function callback_spot_terminatio_time {
+  curl -X PUT -d "{ \"schedule\": \"\" }" $app_host/callback/$job_id
+}
+
+# Set callback call to mark job as failed
+function callback_error {
+  curl -X PUT -d "{ \"failed\": \"\", \"error_message\": \"$(head -n 1 error_message.log)\" }" $app_host/callback/$job_id
+}
+
+echo "if curl -s http://169.254.169.254/latest/meta-data/spot/termination-time | grep -q .*T.*Z; then callback_spot_terminatio_time; fi" >> /root/termination-time.sh
 chmod +x /root/termination-time.sh
 echo "* * * * * /root/termination-time.sh" >> /etc/crontab
 
 echo "Pull docker image"
-docker pull %{docker_image}
+if ! docker pull %{docker_image} 2>> error_message.log; then
+  callback_error
+  exit 1
+fi
 
 echo "Run docker container"
-docker run %{env_vars} %{docker_image}
+if ! docker run %{env_vars} %{docker_image} 2> error_message.log; then
+  callback_error
+  exit 1
+fi
 echo "Finish docker container"
 
 echo "Running callback to inform application that the job is done"
-curl -X PUT -d {} %{app_host}/callback/%{job_id}
+callback_job_done

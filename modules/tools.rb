@@ -1,7 +1,6 @@
-# modules/tools.rb
 module Tools
   def validate_time
-    message = "scheduled_for field must be greater than #{Time.now}"
+    message = "scheduled_for field must be greater than #{1.minutes.from_now}"
     halt 400, { message: message }.to_json if @response_body[:scheduled_for] < 1.minutes.from_now
   end
 
@@ -12,6 +11,14 @@ module Tools
   def validate_schedule_params
     halt 400, { message: 'docker_image field cannot be empty' }.to_json if @response_body[:docker_image].nil? || @response_body[:docker_image].empty?
     halt 400, { message: 'scheduled_for field cannot be empty' }.to_json if @response_body[:scheduled_for].nil? || @response_body[:scheduled_for].empty?
+  end
+
+  def verify_callback_failed_param
+    if @response_body[:failed]
+      @job.update_attributes(status: JobStatus.failed, error_message: @response_body[:error_message])
+    else
+      @job.update_attributes(status: JobStatus.done)
+    end
   end
 
   def load_body
