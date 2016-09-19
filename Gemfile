@@ -22,11 +22,14 @@ gem 'dotenv'
 gem 'settingslogic'
 
 # RSpec
-group :developmen, :test do
+group :test do
   gem 'rspec'
   gem 'rack-test'
   %w(rspec-core rspec-expectations rspec-mocks rspec-support).each do |lib|
     gem lib
   end
+  gem 'rspec-sidekiq'
+  gem 'factory_girl'
+  gem 'faker'
   gem 'pry-byebug'
 end

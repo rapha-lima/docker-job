@@ -1,5 +1,5 @@
 status:
-  schedule: SCHEDULED
+  scheduled: SCHEDULED
   done: DONE
   running: RUNNING
   failed: FAILED

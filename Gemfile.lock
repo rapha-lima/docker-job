@@ -25,6 +25,10 @@ GEM
     connection_pool (2.2.0)
     diff-lcs (1.2.5)
     dotenv (2.1.1)
+    factory_girl (4.7.0)
+      activesupport (>= 3.0.0)
+    faker (1.6.6)
+      i18n (~> 0.5)
     i18n (0.7.0)
     jmespath (1.3.1)
     method_source (0.8.2)
@@ -56,6 +60,9 @@ GEM
     rspec-mocks (3.5.0)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.5.0)
+    rspec-sidekiq (2.2.0)
+      rspec (~> 3.0, >= 3.0.0)
+      sidekiq (>= 2.4.0)
     rspec-support (3.5.0)
     settingslogic (2.0.9)
     sidekiq (4.1.4)
@@ -83,6 +90,8 @@ DEPENDENCIES
   activerecord
   aws-sdk (~> 2)
   dotenv
+  factory_girl
+  faker
   pg
   pry-byebug
   rack-test
@@ -91,6 +100,7 @@ DEPENDENCIES
   rspec-core
   rspec-expectations
   rspec-mocks
+  rspec-sidekiq
   rspec-support
   settingslogic
   sidekiq

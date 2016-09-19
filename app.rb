@@ -57,7 +57,7 @@ class App < Sinatra::Application
       docker_image: @response_body[:docker_image],
       scheduled_for: @response_body[:scheduled_for],
       env_vars: @response_body[:env_vars],
-      status: JobStatus.schedule
+      status: JobStatus.scheduled
     )
 
     DockerJobInitializer.perform_in(@response_body[:scheduled_for], job.id)
@@ -72,7 +72,7 @@ class App < Sinatra::Application
 
     if @response_body[:schedule]
       schedule_for = 5.minutes.from_now
-      @job.update_attributes(scheduled_for: schedule_for, status: JobStatus.schedule)
+      @job.update_attributes(scheduled_for: schedule_for, status: JobStatus.scheduled)
 
       DockerJobInitializer.perform_in(5.minutes.from_now, @job.id)
     else
