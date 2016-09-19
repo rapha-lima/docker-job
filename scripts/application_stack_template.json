@@ -222,7 +222,7 @@
                 "fi\n",
                 "\n",
                 "# Puting docker-compose up in rc.local to initiate in case of reboot\n",
-                "echo \"cd /opt/docker-job; /usr/local/bin/docker-compose up -d\" >> /etc/rc.local\n",
+                "echo \"cd /opt/docker-job; export PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4); sed -i \\\"s/APP_HOST=.*/APP_HOST=http:\/\/$PUBLIC_IP/g\\\" .env; /usr/local/bin/docker-compose up -d --build\" >> /etc/rc.local\n",
                 "\n",
                 "# Success\n",
                 "echo \"SUCCESS\"\n",
@@ -273,19 +273,6 @@
       "Metadata": {
         "AWS::CloudFormation::Designer": {
           "id": "3148ff1e-0366-436c-bcb2-5becebaf4f2e"
-        }
-      }
-    },
-    "EC2EIP": {
-      "Type": "AWS::EC2::EIP",
-      "Properties": {
-        "InstanceId": {
-          "Ref": "ApplicationInstance"
-        }
-      },
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "4ca9af5e-351c-4221-a8d7-45f5549211e3"
         }
       }
     },
