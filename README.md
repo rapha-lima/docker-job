@@ -62,7 +62,7 @@ This endpoint is only to the instance provisioned call to perform a specific beh
 
 ## How to deploy it
 
-There is an script to deploy an run the app on AWS.
+There is an script to deploy and run the app on AWS.
 
 #### Steps:
 
@@ -72,7 +72,7 @@ There is an script to deploy an run the app on AWS.
  * You need to put here your AWS credentials. PS: It will launch the environment on us-east-1 region.
 
 The `deploy.sh` script will provisoner a cloudformation stack with all elements needed to run and deploy the application.
-The application will run in a docker container inside a ECS AWS linux based instance.
+The application will run in a docker container inside an ECS AWS linux based instance.
 
 After deploy is done, you call schedule your docker jobs.
 
